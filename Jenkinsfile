@@ -1,4 +1,4 @@
-pripeline{
+pipeline{
     agent any
     environment {
         PATH = "${PATH}:${getTerraformPath()}"
