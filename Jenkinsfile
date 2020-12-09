@@ -20,7 +20,9 @@ pripeline{
 
     }
 }
+}
 def getTerraformPath(){
     def tfHome = tool name: 'terraform', type: 'org.jenkisci.plugins.terraform.Terraforminstallation'
     return tfHome
 }
+
