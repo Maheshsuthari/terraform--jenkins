@@ -6,13 +6,13 @@ pripeline{
     stages{
         stage('terraform init and apply - dev'){
             steps{
-                sh returnStatus:true script: 'terraform workspace new dev'
+                sh returnStatus:true, script: 'terraform workspace new dev'
                 sh "terraform init"
                 sh "terraform apply -auto-approve"
             }
         stage('terraform init and apply - qa'){
             steps{
-                sh returnStatus:true script: 'terraform workspace new qa'
+                sh returnStatus:true, script: 'terraform workspace new qa'
                 sh "terraform init"
                 sh "terraform apply -auto-approve"
             }
