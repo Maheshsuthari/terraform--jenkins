@@ -1,0 +1,13 @@
+{
+    "Version": "2017-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt15643",
+            "Action": [
+                "S3:PutObject"
+            ],
+            "Effect": "Allow",
+            "Resource": "${s3_bucket_arn}"
+        }
+    ]
+}

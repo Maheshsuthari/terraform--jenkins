@@ -1,0 +1,174 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Sample Template for launching Tomcat instance(s) in Autoscaling group",
+
+"Parameters" : {
+
+    "ChefEnvironment" : {
+      "Description" : "Name of Chef environment in which you launch this tomcat instance(s)",
+      "Type" : "String"
+    },
+    "KeyName" : {
+      "Description" : "Name of and existing EC2 KeyPair to enable SSH access to the instance",
+      "Type" : "String"
+    },
+
+    "TomcatAmi" : {
+      "Description" : "Name of an existing Tomcat AMI to use",
+      "Type" : "String"
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "Subnets" : {
+      "Type" : "CommaDelimitedList",
+      "Description" : "The list of SubnetIds in your Virtual Private Cloud (VPC)"
+    },
+
+    "AZs" : {
+      "Type" : "CommaDelimitedList",
+      "Description" : "The list of AvailabilityZones for your Virtual Private Cloud (VPC)"
+    },
+
+    "AccessKey" : {
+      "Description" : "Access Key to use for cloud init",
+      "Type" : "String",
+      "NoEcho": "true"
+    },
+
+    "SecretKey" : {
+      "Description" : "Secret Key",
+      "Type" : "String",
+      "NoEcho": "true"
+    },
+
+    "ChefRole" : {
+      "Description" : "Name of the chef role to add to this tomcat instance(s)",
+      "Type" : "String"
+    },
+
+    "SecurityGroup" : {
+        "Type" : "String",
+        "Description" : "Security Group ID in your VPC in which this particular instance shall launch "
+
+    },
+
+     "InstanceCount" : {
+      "Description" : "Number of EC2 instances to launch",
+      "Type" : "Number",
+      "Default" : "3"
+    }
+
+   },
+
+  "Resources" : {
+
+       "WebServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "AvailabilityZones" : { "Ref" : "AZs" },
+        "VPCZoneIdentifier" : { "Ref" : "Subnets" },
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "2",
+        "MaxSize" : "10",
+        "DesiredCapacity" : { "Ref" : "InstanceCount" }
+      }
+    },
+
+        "LaunchConfig" : {
+        "Type" : "AWS::AutoScaling::LaunchConfiguration",
+
+      "Metadata" : {
+      "AWS::CloudFormation::Init" : {
+        "config" : {
+          "packages" : {
+          },
+          "sources" : {
+          },
+          "commands" : {
+          },
+
+           "files" : {
+              "/etc/chef/validation.pem" : {
+                "source" : "https://s3-us-west-2.amazonaws.com/nclouds/chef/validation.pem",
+                "mode" : "000644",
+                "owner" : "root",
+                "group" : "root",
+                "authentication" : "S3AccessCreds"
+              },
+              "/etc/chef/client.rb" : {
+              "content" : { "Fn::Join" : ["", [
+                                    "log_level        :infon",
+                                    "log_location     STDOUTn",
+                                    "ssl_verify_mode  :verify_nonen",
+                                    "chef_server_url  'https://chef-server.nclouds.net'n",
+                                    "environment      '", { "Ref" : "ChefEnvironment" }, "'n",
+                                    "validation_client_name 'chef-validator'n"
+                                ]]},
+                                "mode"  : "000644",
+                                "owner" : "root",
+                                "group" : "root"
+              },
+
+             "/etc/chef/roles.json" : {
+               "content" : { "Fn::Join" : ["", [
+                  "{"run_list": [ "role[base]","role[",{ "Ref" : "ChefRole" },"]" ]}"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+
+            },
+
+          "services" : {
+          },
+          "users" : {
+          },
+          "groups" : {
+          }
+        }
+      },
+       "AWS::CloudFormation::Authentication" : {
+      "S3AccessCreds" : {
+        "type" : "S3",
+        "accessKeyId" : { "Ref" : "AccessKey" },
+        "secretKey" : { "Ref" : "SecretKey"}
+      }
+    }
+    },
+
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName"  : {"Ref" : "KeyName"},
+        "UserData" : {
+         "Fn::Base64" : {
+             "Fn::Join" : [ "", [
+                 "#!/bin/bash -vn",
+                 "curl -L http://www.opscode.com/chef/install.sh | bashn",
+                 "echo '54.214.7.132 chef-server.nclouds.net' >> /etc/hostsn",
+                 "yum update -y aws-cfn-bootstrapn",
+                  "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r LaunchConfig",
+          "         --access-key ", { "Ref" : "AccessKey" },
+           "         --secret-key ", { "Ref" : "SecretKey" },
+          "         --region ", { "Ref" : "AWS::Region" }, "|| error_exit 'Failed to run cfn-init'n",
+                   "LOCAL_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4 | sed 's/./-/g'`n",
+                   "echo "node_name   "",{ "Ref" : "AWS::StackName" },"-$LOCAL_IP"" >> /etc/chef/client.rbn",
+                    "chef-client -S https://chef-server.nclouds.net -j /etc/chef/roles.json -N ", { "Ref" : "AWS::StackName" }, "-`echo -n $LOCAL_IP` -E ", { "Ref" : "ChefEnvironment" }, "" 
+
+                   ]
+             ]
+         }
+      },
+        "ImageId"  : {"Ref" : "TomcatAmi"},
+        "SecurityGroups" : [{ "Ref" : "SecurityGroup" }]
+      }
+    }
+  }
+}
