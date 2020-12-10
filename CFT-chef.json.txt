@@ -62,7 +62,7 @@
      "InstanceCount" : {
       "Description" : "Number of EC2 instances to launch",
       "Type" : "Number",
-      "Default" : "3"
+      "Default" : "1"
     }
 
    },
@@ -96,7 +96,7 @@
 
            "files" : {
               "/etc/chef/validation.pem" : {
-                "source" : "https://s3-us-west-2.amazonaws.com/nclouds/chef/validation.pem",
+                "source" : "s3://mahesh-interview/smahesh1.pem",
                 "mode" : "000644",
                 "owner" : "root",
                 "group" : "root",
@@ -107,7 +107,7 @@
                                     "log_level        :infon",
                                     "log_location     STDOUTn",
                                     "ssl_verify_mode  :verify_nonen",
-                                    "chef_server_url  'https://chef-server.nclouds.net'n",
+                                    "chef_server_url  'https://api.chef.io/organizations/vedhas'n",
                                     "environment      '", { "Ref" : "ChefEnvironment" }, "'n",
                                     "validation_client_name 'chef-validator'n"
                                 ]]},
@@ -135,15 +135,7 @@
           }
         }
       },
-       "AWS::CloudFormation::Authentication" : {
-      "S3AccessCreds" : {
-        "type" : "S3",
-        "accessKeyId" : { "Ref" : "AccessKey" },
-        "secretKey" : { "Ref" : "SecretKey"}
-      }
-    }
-    },
-
+       
       "Properties" : {
         "InstanceType" : { "Ref" : "InstanceType" },
         "KeyName"  : {"Ref" : "KeyName"},
