@@ -13,7 +13,7 @@ pipeline{
       steps{
         def tfHome = tool name: ‘terraform’
         env.PATH = “${tfHome}:${env.PATH}”
-      } sh ‘terraform — version’
+        sh ‘terraform — version’
     }  
     stage('terraform init and apply - dev'){
       steps{
