@@ -16,7 +16,8 @@ pipeline{
           env.PATH = “${tfHome}:${env.PATH}”
 	 }
          sh ‘terraform — version’
-    }  
+     }
+    } 
     stage('terraform init and apply - dev'){
       steps{
         sh returnStatus: true, script: 'terraform workspace new dev'
@@ -34,7 +35,7 @@ pipeline{
     }
   }
 }
-}
+
 
 //def getTerraformPath(){
 //  def tfHome = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
