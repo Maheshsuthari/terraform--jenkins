@@ -9,7 +9,7 @@ pipeline{
         sh "ansible-playbook s3-bucket.yml"
       }
     }
-    stage(‘Set Terraform path’){
+    stage('set terraform path'){
       steps{
         def tfHome = tool name: ‘terraform’
         env.PATH = “${tfHome}:${env.PATH}”
