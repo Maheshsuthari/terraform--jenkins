@@ -1,9 +1,7 @@
 pipeline{
   agent any
   environment {
-    TF_HOME = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-    PATH = "$TF_HOME:$PATH"
-    //PATH = "${PATH}:${getTerraformPath()}"
+    PATH = "${PATH}:${getTerraformPath()}"
   }
   stages{
     stage('S3 - create bucket'){
@@ -15,7 +13,7 @@ pipeline{
       steps{
         sh returnStatus: true, script: 'terraform workspace new dev'
         sh "terraform init"
-        sh "terraform apply -auto-aprove"
+        sh "ansible-playbook terraform.yml"
       }
     }
 
@@ -23,13 +21,13 @@ pipeline{
       steps{
         sh returnStatus: true, script: 'terraform workspace new prod'
         sh "terraform init"
-        sh "terraform apply -auto-approve"
+        sh "ansible-playbook terraform.yml -e app_env=prod"
       }
     }
   }
 }
 
-//def getTerraformPath(){
-//  def tfHome = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-//  return tfHome
-//}
+def getTerraformPath(){
+  def tfHome = tool name: 'terraform-12', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+  return tfHome
+}
