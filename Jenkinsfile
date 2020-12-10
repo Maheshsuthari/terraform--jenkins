@@ -9,9 +9,9 @@ pipeline{
         sh "ansible-playbook s3-bucket.yml"
       }
     }
-    stage(‘Set Terraform path’) {
-      steps {
-        script {
+    stage(‘Set Terraform path’){
+      steps{
+        script{
         def tfHome = tool name: ‘Terraform’
         env.PATH = “${tfHome}:${env.PATH}”
       }
@@ -36,7 +36,7 @@ pipeline{
 }
 }
 
-def getTerraformPath(){
-  def tfHome = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-  return tfHome
-}
+//def getTerraformPath(){
+//  def tfHome = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+//  return tfHome
+//}
